@@ -130,7 +130,12 @@ public class PathPlanner {
 			}
 			goal = goal.getParent();
 		}
-		bot.setPlannedRoute(route);
+		try{
+			bot.setPlannedRoute(route);
+		} catch (NullPointerException e){
+
+		}
+
 	}
 	
 	public static Node localExploration(ExplorerBot bot) {

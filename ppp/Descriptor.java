@@ -88,7 +88,7 @@ public class Descriptor {
 					break;}
 			case 1: {newY(size);
 					break;}
-			case 2: {lengthenDes();
+			case 2: {lengthenDes(size);
 					break;}
 			case 3: {shortenDes();
 					break;}
@@ -102,37 +102,69 @@ public class Descriptor {
 	 * 	generate a new x for the descriptor by given the size of its PPP
 	 */
 	private void newX(short size){
-		x = (short)(generator.nextInt(size)+1);
+		short nextX = 9999;
+		while(nextX > x + 3 || nextX < x - 3){
+			nextX = (short)(generator.nextInt(size)+1);
+		}
+		x = nextX;
 	}
 	/*
 	 * 	generate a new y for the descriptor by given the size of its PPP
 	 */
 	private void newY(short size){
-		y = (short)(generator.nextInt(size)*2+1);
+		short nextY = 9999;
+		while(nextY > y + 3 || nextY < y - 3){
+			nextY = (short)(generator.nextInt(size)*2+1);
+		}
+		y = nextY;
 	}
 	/*
 	 * 	lengthen the length of the descriptor by one 
 	 */
-	private void lengthenDes(){
-		l++;
+	private void lengthenDes(short size){
+		short newL = 0;
+
+		while(newL < l) {
+			newL = (short)generator.nextInt(l + 4);
+		}
+		l = newL;
 	}
 	/*
 	 * 	shorten the length of the descriptor by one unless this would
 	 * 	make the length zero
 	 */
 	private void shortenDes(){
-		if(l>1) l--;
+		short newL = 0;
+		if(l>1) {
+			while(newL < l - 3){
+				newL = (short)generator.nextInt(l);
+			}
+			l = newL;
+		}
 	}
 	/*
 	 * 	change the type of the descriptor randomly;
 	 */
 	private void changeType(){
-		short temp = (short)(generator.nextInt(6));
-		while(temp == t){
-			temp = (short)(generator.nextInt(6));
+		int direction = generator.nextInt(2);
+		switch (direction) {
+			case 0: {
+				t += 1;
+				if (t>5) {
+					t -= 6;
+				}
+				break;
+			}
+			case 1: {
+				t-=1;
+				if (t<0){
+					t += 6;
+				}
+				break;
+			}
 		}
-		t = temp;
 	}
+
 
 	private void changeObs(){
 		short temp = (short)(generator.nextInt(2));

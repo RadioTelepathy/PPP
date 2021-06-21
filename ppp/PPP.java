@@ -30,6 +30,7 @@ public class PPP{
 	private char[][] map;			// the char array of the map
 	public Descriptor[] arrayDes;	// the array of the descriptors
 	//private Descriptor[] tempDes;	// the temp array of the descriptors, for updatePPP
+	private short crossover;		// The number of features of a child that come from parent 1
 	/*
 	 * 	0 presents the current cell is non-occupied and 1 presents occupied
 	 * 	2 presents the cell is occupied by the agent or the destination
@@ -357,6 +358,7 @@ public class PPP{
 	 * 	Create the array of Descriptors
 	 */
 	private void iniPPP(){
+		crossover = 0;
 		iniOcc();
 		iniBoundary();
 		iniAgency();
@@ -657,7 +659,11 @@ public class PPP{
 			child.updatePPP();
 			reachable = child.checkAvailable();
 		}
-		return child;
+		if(reachable) {
+			return child;
+		} else{
+			return this;
+		}
 	}
 	/*
 	 * 	Update PPP after mutation and two point crossover
@@ -677,7 +683,7 @@ public class PPP{
 	/*
 	 * 	Update the descriptors after mutation
 	 */
-	private void updateDescriptors(){
+	public void updateDescriptors(){
 		short obsLeft = maxObs;
 		short lDes;
 		for (short i = 0; i<nDes; i++){
@@ -871,17 +877,21 @@ public class PPP{
 		short flushWalls = 0;
 		for (short i = 0; i<nDes;i++){
 			if(arrayDes[i].getY() == 1 && arrayDes[i].getType() == 2 || arrayDes[i].getY() == 1 && arrayDes[i].getType() == 3){
-				flushWalls++;
+				flushWalls += (arrayDes[i].getLength())^2;
 			} else if (arrayDes[i].getY() == 39 && arrayDes[i].getType() == 2 || arrayDes[i].getY() == 39 && arrayDes[i].getType() == 3){
-				flushWalls++;
+				flushWalls += (arrayDes[i].getLength())^2;
 			}
 			if(arrayDes[i].getX() == 1 && arrayDes[i].getType() == 0 || arrayDes[i].getX() == 1 && arrayDes[i].getType() == 1){
-				flushWalls++;
+				flushWalls += (arrayDes[i].getLength())^2;
 			} else if (arrayDes[i].getX() == 20 && arrayDes[i].getType() == 0 || arrayDes[i].getX() == 20 && arrayDes[i].getType() == 1){
-				flushWalls++;
+				flushWalls += (arrayDes[i].getLength())^2;
 			}
 		}
 		return flushWalls;
+	}
+
+	public short getCrossover(){
+		return crossover;
 	}
 
 	public boolean samePPP(PPP target){
@@ -915,7 +925,7 @@ public class PPP{
 		    writer.write(bestStateValue().getMove()+"\n");
 		    
 		    for(short i=0; i<nDes; i++){
-				writer.write(arrayDes[i].write());
+				writer.write(this.arrayDes[i].write());
 				if(i!=(short)(nDes-1)){
 					writer.write(", ");
 				}
@@ -1236,6 +1246,10 @@ public class PPP{
 	
 	public double getObstacleUse(){
 		return this.obstaclesUsePercentage;
+	}
+
+	public short getnDes(){
+		return nDes;
 	}
 	
 	public int getUnreachableCells(){

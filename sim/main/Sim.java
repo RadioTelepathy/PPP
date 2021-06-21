@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 
 import ppp.PPP;
 import ppp.Descriptor;
+import ppp.PPPManager;
 import sim.agent.Bot;
 import sim.agent.BumperBot;
 import sim.agent.DecisionBumper;
@@ -83,6 +84,8 @@ public class Sim {
 			String fileName = f.getName();
 			if (fileName.contains(".ppp")){
 				PPP map = loadPPP(f.getPath(), false);
+				map.drawMap();
+				map.displayMap();
 				System.out.printf("Testing %s...\n", fileName);
 				if (verbose){
 					displayPPP(map);
@@ -98,7 +101,7 @@ public class Sim {
 					csvReady = true;
 				}
 				//bots.clear();
-				csv.writePPP(map, fileName);
+				csv.writeToCSV(map, fileName);
 				try {
 					testAll(map, bots, csv);
 				} catch (Exception e){
@@ -107,6 +110,41 @@ public class Sim {
 				}
 				System.out.println("Tests complete.");
 			}
+		}
+		csv.closeCSV();
+		if (unreachable > 0){
+			System.out.printf("\n%d Unreachable PPPs in test set were skipped!\n", unreachable);
+		}
+	}
+
+	public static void newTestPopulation(PPPManager manager, String folder){
+		boolean csvReady = false;
+		CsvWriter csv = null;
+		int unreachable = 0;
+		for(short i = 0; i<60; i++){
+			PPP map = manager.population[i];
+			System.out.println("PPP "+i);
+			map.displayMap();
+			if(!map.checkAvailable()){
+				System.err.println("Unreachable PPP in test set!");
+				unreachable++;
+				continue;
+			} else {
+				ArrayList<Bot> bots = getBots(map);
+				if (!csvReady){
+					csv = new CsvWriter(folder, bots);
+					csvReady = true;
+				}
+				String s = String.valueOf(i);
+				csv.writeToCSV(map, s);
+				try {
+					testAll(map, bots, csv);
+				} catch (Exception e){
+					csv.closeCSV();
+					throw e;
+				}
+			}
+			System.out.println("Tests complete.");
 		}
 		csv.closeCSV();
 		if (unreachable > 0){
@@ -224,6 +262,36 @@ public class Sim {
 			System.out.printf("\n%d Unreachable PPPs in test set were skipped!\n", unreachable);
 		}
 	}
+
+	public static void newUPGMA(PPPManager manager, String folder){
+		ArrayList<PPP> maps = new ArrayList<PPP>();
+		UPGMA tree = new UPGMA();
+		int unreachable = 0;
+		for (short i = 0; i<60; i++){
+			PPP map = manager.population[i];
+			if(!map.checkAvailable()){
+				System.err.println("Unreachable PPP in test set!");
+				unreachable++;
+				continue;
+			}
+			maps.add(map);
+			TaxChar tc = new TaxChar(map.getAdvance(), map.getTurn(), map.getObsUsed());
+			tc.addExtraCharacters(map.getGoalVisibility(), map.getStartVisibility(), map.getCentreVisibility(),
+					map.getTopRightVisibility(), map.getBottomLeftVisiblity(), map.getObstacleUse(),
+					0, map.getAvgOpenW(), map.getAvgOpenH());
+//				tc.addExtraCharacters(map.getGoalVisibleCells(), map.getStartVisibleCells(), map.getCentreVisibleCells(),
+//				map.getTRVisibleCells(), map.getBottomLeftVisiblity(), map.getObstacleUse(),
+//				0, map.getAvgOpenCellsW(), map.getAvgOpenCellsV());
+			tc.normalizeTC();
+		}
+		tree.calUPGMA();
+		tree.writeForceJson(folder);
+		//tree.writeTreeJson(folder);
+		if (unreachable > 0){
+			System.out.printf("\n%d Unreachable PPPs in test set were skipped!\n", unreachable);
+		}
+
+	}
 	
 	
 	/*
@@ -275,15 +343,15 @@ public class Sim {
 					Descriptor des = new Descriptor(x, y, l, t, o);
 					ret.setDescriptor(des, pos);
 					pos++;
+					ret.updatePPP();
 					if (verbose) {
 						System.out.println("Set " + des.toString());
-						ret.updatePPP();
 						ret.drawMap();
 						ret.displayMap();
 					}
 				}
 			}
-/**
+
 			short[][] occ = ret.getOccGrid();
 			line = reader.readLine();
 			int x = 0;
@@ -303,10 +371,6 @@ public class Sim {
 									case "[":
 										prevWall="]";
 										occ[y][x]=(short)4;
-										break;
-									case "]":
-										prevWall="[";
-										occ[y][x]=(short)3;
 										break;
 									case "(":
 										prevWall= ")";
@@ -336,10 +400,11 @@ public class Sim {
 			}
 			//ret.setOccGrid(occ);
 			//ret.displayOcc();
- **/
+
 			ret.iniBoundary();
 			ret.iniAgency();
 			ret.iniDestination();
+			ret.updateDescriptors();
 			ret.evaluatePPP();
 			
 			// Read map from remaining lines
@@ -392,8 +457,8 @@ class CsvWriter {
 		}
 	}
 	
-	public void writePPP(PPP map, String fileName){
-		this.writeToCSV(fileName);
+	public void writeToCSV(PPP map, String num){
+		this.writeToCSV("PPP" + num);
 		this.writeToCSV(",");
 		String s =  String.format("%d,%d,%.2f,%.2f,%.2f,%.2f,%d,%d,%d,%.2f,%.2f,%.2f", 
 								map.getTurn(), map.getAdvance(), 
