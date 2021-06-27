@@ -327,7 +327,7 @@ public class Sim {
 
 			PPP ret = new PPP(size, (short) descriptors.length, (short) maxObs);
 			for (int i = 0; i < ret.arrayDes.length; i++){
-				Descriptor t = new Descriptor(0,0,0,0,0);
+				Descriptor t = new Descriptor(0,0,0,0);
 				ret.setDescriptor(t, i);
 			}
 			
@@ -340,7 +340,7 @@ public class Sim {
 					int l = Integer.parseInt(vals[2]);
 					int t = Integer.parseInt(vals[3]);
 					int o = Integer.parseInt(vals[4]);
-					Descriptor des = new Descriptor(x, y, l, t, o);
+					Descriptor des = new Descriptor(x, y, l, t);
 					ret.setDescriptor(des, pos);
 					pos++;
 					ret.updatePPP();

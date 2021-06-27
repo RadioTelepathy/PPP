@@ -12,7 +12,6 @@ public class Descriptor {
 	private short y;		// y coordinate of the descriptor
 	private short l;		// the length of the descriptor
 	private short t;		// the type or pattern of the descriptors
-	private short o;		// the type of obstacle the descriptor uses
 	Random generator;	// for evolution
 	/*
 	 * 	Constructor for Descriptor
@@ -22,15 +21,13 @@ public class Descriptor {
 		this.y = y;
 		this.l = l;
 		this.t = t;
-		this.o = o;
 	}
 	
-	public Descriptor(int x, int y, int l, int t, int o){
+	public Descriptor(int x, int y, int l, int t){
 		this.x = (short) x;
 		this.y = (short) y;
 		this.l = (short) l;
 		this.t = (short) t;
-		this.o = (short) o;
 	}
 	
 	/*
@@ -41,7 +38,6 @@ public class Descriptor {
 		this.y = d.y;
 		this.l = d.l;
 		this.t = d.t;
-		this.o = d.o;
 	}
 	/*
 	 * 	return x coordinate
@@ -68,9 +64,6 @@ public class Descriptor {
 		return t;
 	}
 
-	public short getObstacle(){
-		return o;
-	}
 	/*
 	 * 	Set the length of the descriptors
 	 */
@@ -82,20 +75,29 @@ public class Descriptor {
 	 */
 	public void mutation(short size){
 		generator = new Random();
-		int mut = generator.nextInt(6);
-		switch(mut){
-			case 0: {newX(size);
-					break;}
-			case 1: {newY(size);
-					break;}
-			case 2: {lengthenDes(size);
-					break;}
-			case 3: {shortenDes();
-					break;}
-			case 4: {changeType();
-					break;}
-			case 5: changeObs();
-					break;}
+		int mut = generator.nextInt(5);
+		switch(mut) {
+			case 0: {
+				newX(size);
+				break;
+			}
+			case 1: {
+				newY(size);
+				break;
+			}
+			case 2: {
+				lengthenDes(size);
+				break;
+			}
+			case 3: {
+				shortenDes();
+				break;
+			}
+			case 4: {
+				changeType();
+				break;
+			}
+		}
 		}
 
 	/*
@@ -134,12 +136,8 @@ public class Descriptor {
 	 * 	make the length zero
 	 */
 	private void shortenDes(){
-		short newL = 0;
 		if(l>1) {
-			while(newL < l - 3){
-				newL = (short)generator.nextInt(l);
-			}
-			l = newL;
+			l--;
 		}
 	}
 	/*
@@ -165,13 +163,6 @@ public class Descriptor {
 		}
 	}
 
-
-	private void changeObs(){
-		short temp = (short)(generator.nextInt(2));
-		while (temp == o) {
-			temp = (short)(generator.nextInt(2));
-		}
-	}
 	/*
 	 * 	toString
 	 */
@@ -202,7 +193,7 @@ public class Descriptor {
 	}
 	
 	public String write(){
-		String result = "("+ x + "," + y + "," + l +","+ t + "," + o + ")";
+		String result = "("+ x + "," + y + "," + l +","+ t + "," + ")";
 		return result;
 	}
 }

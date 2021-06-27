@@ -10,7 +10,7 @@ import sim.main.Sim;
 public class Main {
 	private final static int size = 20; //Width and Height of the PPP
 	private final static int descriptors = 10; //Number of different things that can be in a PPP
-	private final static int obstacles = 50; //Maximum number of obstacles
+	private final static int obstacles = 200; //Maximum number of obstacles
 	public final static int sensorRange = 3;
 
 	public static void main(String[] args){

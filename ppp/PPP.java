@@ -145,15 +145,10 @@ public class PPP{
 				if(occ[i][j]==4){
 					map[i][j] = ']'; // Obstacle
 				}
-				if(occ[i][j]==9) {
-					map[i][j] = '('; // Clear Obstacle Left
-				}
-				if(occ[i][j]==10) {
-					map[i][j] = ')'; // Clear Obstacle Right
 				}
 			}
 		}
-	}
+
 	/*
 	 * 	initialize boundaries for createDescriptors
 	 */
@@ -195,19 +190,18 @@ public class PPP{
 		for (short i = 0; i<nDes; i++){
 			Random generator = new Random();
 			short rRow, rCol;
-			short obsType;
+
 			do{
 				// the x position of the descriptor
 				rRow = (short)(generator.nextInt(size)+1);
 				// the y position of the descriptor
 				rCol = (short)(generator.nextInt(size)*2+1);
+			}
 
-
-			}while(occ[rRow][rCol]==2||occ[rRow][rCol]==12);
+			while(occ[rRow][rCol]==2||occ[rRow][rCol]==12);
 			// the type of the descriptor, totally six.
 			short type = (short)generator.nextInt(6);
 			// the type of descriptor being created
-			obsType = (short)generator.nextInt(2);
 			short currentLength = 0;	// the length of the current descriptor
 			/*
 			 * 	If the remaining obsLeft is greater than one, then create descriptor
@@ -215,14 +209,9 @@ public class PPP{
 			 */
 			if(obsLeft>0){
 				lDes = lengthDes(obsLeft); // the maximum number of obstructions for one descriptor
-				if(occ[rRow][rCol]==0 && obsType % 2 == 0){
+				if(occ[rRow][rCol]==0){
 					occ[rRow][rCol] = 3;
 					occ[rRow][rCol+1] = 4;
-					currentLength++;
-					lDes--;
-				} else {
-					occ[rRow][rCol] = 9;
-					occ[rRow][rCol+1] = 10;
 					currentLength++;
 					lDes--;
 				}
@@ -230,13 +219,9 @@ public class PPP{
 				if (type == 0){
 					for (short j=0; j<lDes; j++){
 						if(rCol+j*2<col-2) {
-							if (occ[rRow][rCol + j * 2] == 0 && obsType % 2 == 0) {
+							if (occ[rRow][rCol + j * 2] == 0) {
 								occ[rRow][rCol + j * 2] = 3;
 								occ[rRow][rCol + 1 + j * 2] = 4;
-								currentLength++;
-							}else if(occ[rRow][rCol + j * 2] == 0 && obsType % 2 == 1){
-								occ[rRow][rCol + j * 2] = 9;
-								occ[rRow][rCol + 1 + j * 2] = 10;
 								currentLength++;
 							}else lDes++;
 						}else{
@@ -248,15 +233,11 @@ public class PPP{
 				if (type == 1){
 					for (short j=0; j<lDes; j++){
 						if(rCol-j*2>0){
-							if(occ[rRow][rCol-j*2]==0 && obsType % 2 == 0){
+							if(occ[rRow][rCol-j*2]==0){
 								occ[rRow][rCol-j*2] = 3;
 								occ[rRow][rCol+1-j*2] = 4;
 								currentLength++;
-							}else if(occ[rRow][rCol-j*2]==0 && obsType % 2 == 1){
-								occ[rRow][rCol-j*2] = 9;
-								occ[rRow][rCol+1-j*2] = 10;
-								currentLength++;
-							} else lDes++;
+							}else lDes++;
 						}else{
 							break;
 						}
@@ -266,15 +247,11 @@ public class PPP{
 				if (type == 2){
 					for (short j=0; j<lDes; j++){
 						if(rRow-j>0){
-							if(occ[rRow-j][rCol]==0 && obsType % 2 == 0){
+							if(occ[rRow-j][rCol]==0){
 								occ[rRow-j][rCol] = 3;
 								occ[rRow-j][rCol+1] = 4;
 								currentLength++;
-							}else if(occ[rRow-j][rCol]==0 && obsType % 2 == 1){
-								occ[rRow-j][rCol] = 9;
-								occ[rRow-j][rCol+1] = 10;
-								currentLength++;
-							} else lDes++;
+							}else lDes++;
 						}else{
 							break;
 						}
@@ -284,15 +261,11 @@ public class PPP{
 				if (type == 3){
 					for (short j=0; j<lDes; j++){
 						if(rRow+j<row-1){
-							if(occ[rRow+j][rCol]==0 && obsType % 2 == 0){
+							if(occ[rRow+j][rCol]==0){
 								occ[rRow+j][rCol] = 3;
 								occ[rRow+j][rCol+1] = 4;
 								currentLength++;
-							}else if(occ[rRow+j][rCol]==0 && obsType % 2 == 1){
-								occ[rRow+j][rCol] = 9;
-								occ[rRow+j][rCol+1] = 10;
-								currentLength++;
-							} else lDes++;
+							}else lDes++;
 						}else{
 							break;
 						}
@@ -302,15 +275,11 @@ public class PPP{
 				if (type == 4){
 					for (short j=0; j<lDes; j++){
 						if(rCol-j*2>0 && rRow-j>0){
-							if(occ[rRow-j][rCol-j*2]==0 && obsType % 2 == 0){
+							if(occ[rRow-j][rCol-j*2]==0){
 								occ[rRow-j][rCol-j*2] = 3;
 								occ[rRow-j][rCol+1-j*2] = 4;
 								currentLength++;
-							}else if(occ[rRow-j][rCol-j*2]==0 && obsType % 2 == 1){
-								occ[rRow-j][rCol-j*2] = 9;
-								occ[rRow-j][rCol+1-j*2] = 10;
-								currentLength++;
-							} else lDes++;
+							} lDes++;
 						}else{
 							break;
 						}
@@ -320,22 +289,18 @@ public class PPP{
 				if (type == 5){
 					for (short j=0; j<lDes; j++){
 						if(rCol-j*2>0 && rRow+j<row-1){
-							if(occ[rRow+j][rCol-j*2]==0 && obsType % 2 == 0){
+							if(occ[rRow+j][rCol-j*2]==0){
 								occ[rRow+j][rCol-j*2] = 3;
 								occ[rRow+j][rCol+1-j*2] = 4;
 								currentLength++;
-							}else if(occ[rRow+j][rCol-j*2]==0 && obsType % 2 == 1){
-								occ[rRow+j][rCol-j*2] = 9;
-								occ[rRow+j][rCol+1-j*2] = 10;
-								currentLength++;
-							} else lDes++;
+							}else lDes++;
 						}else{
 							break;
 						}
 					}
 				}
 			}
-			arrayDes[i] = new Descriptor(rRow, rCol, currentLength, type, obsType);
+			arrayDes[i] = new Descriptor(rRow, rCol, currentLength, type);
 			obsLeft -= currentLength;
 			obsUsed += currentLength;
 		}
@@ -442,9 +407,6 @@ public class PPP{
 		case 3:
 		case 4:
 			return true;
-		case 9:
-		case 10:
-			return move;
 		default:
 			return false;
 		}
@@ -693,19 +655,12 @@ public class PPP{
 			short rCol = arrayDes[i].getY();
 			// the type of the descriptor, totally six.
 			short type = arrayDes[i].getType();
-			//the type of obstacle the descriptor is
-			int obsType = arrayDes[i].getObstacle();
 			short currentLength = 0;	// the length of the current descriptor
 			if(obsLeft>0){
 				lDes = arrayDes[i].getLength(); // the maximum number of obstructions for one descriptor
-				if(occ[rRow][rCol]==0 && obsType == 0){
+				if(occ[rRow][rCol]==0){
 					occ[rRow][rCol] = 3;
 					occ[rRow][rCol+1] = 4;
-					currentLength++;
-					lDes--;
-				}else{
-					occ[rRow][rCol] = 9;
-					occ[rRow][rCol+1] = 10;
 					currentLength++;
 					lDes--;
 				}
@@ -713,15 +668,11 @@ public class PPP{
 				if (type == 0){ 
 					for (short j=0; j<lDes; j++){
 						if(rCol+j*2<col-2){
-							if(occ[rRow][rCol+j*2]==0 && obsType == 0){
+							if(occ[rRow][rCol+j*2]==0){
 								occ[rRow][rCol+j*2] = 3;
 								occ[rRow][rCol+1+j*2] = 4;
 								currentLength++;
-							}else if(occ[rRow][rCol+j*2]==0 && obsType == 1){
-								occ[rRow][rCol+j*2] = 9;
-								occ[rRow][rCol+1+j*2] = 10;
-								currentLength++;
-							} else {lDes++;}
+							}else {lDes++;}
 						}else{
 							break;
 						}
@@ -731,15 +682,11 @@ public class PPP{
 				if (type == 1){
 					for (short j=0; j<lDes; j++){
 						if(rCol-j*2>0){
-							if(occ[rRow][rCol-j*2]==0 && obsType == 0){
+							if(occ[rRow][rCol-j*2]==0){
 								occ[rRow][rCol-j*2] = 3;
 								occ[rRow][rCol+1-j*2] = 4;
 								currentLength++;
-							}else if(occ[rRow][rCol-j*2]==0 && obsType == 1){
-								occ[rRow][rCol-j*2] = 9;
-								occ[rRow][rCol+1-j*2] = 10;
-								currentLength++;
-							} else {lDes++;}
+							}else {lDes++;}
 						}else{
 							break;
 						}
@@ -749,13 +696,9 @@ public class PPP{
 				if (type == 2){
 					for (short j=0; j<lDes; j++){
 						if(rRow-j>0){
-							if(occ[rRow-j][rCol]==0 && obsType == 0){
+							if(occ[rRow-j][rCol]==0){
 								occ[rRow-j][rCol] = 3;
 								occ[rRow-j][rCol+1] = 4;
-								currentLength++;
-							} 	else if(occ[rRow-j][rCol]==0 && obsType == 1){
-								occ[rRow-j][rCol] = 9;
-								occ[rRow-j][rCol+1] = 10;
 								currentLength++;
 							}else {lDes++;}
 						}else{
@@ -767,16 +710,11 @@ public class PPP{
 				if (type == 3){
 					for (short j=0; j<lDes; j++){
 						if(rRow+j<row-1){
-							if(occ[rRow+j][rCol]==0 && obsType == 0){
+							if(occ[rRow+j][rCol]==0){
 								occ[rRow+j][rCol] = 3;
 								occ[rRow+j][rCol+1] = 4;
 								currentLength++;
-							}else if(occ[rRow+j][rCol]==0 && obsType == 1){
-								occ[rRow+j][rCol] = 9;
-								occ[rRow+j][rCol+1] = 10;
-								currentLength++;
-							}
-							else {lDes++;}
+							}else {lDes++;}
 						}else{
 							break;
 						}
@@ -786,13 +724,9 @@ public class PPP{
 				if (type == 4){
 					for (short j=0; j<lDes; j++){
 						if(rCol-j*2>0 && rRow-j>0){
-							if(occ[rRow-j][rCol-j*2]==0 && obsType == 0){
+							if(occ[rRow-j][rCol-j*2]==0){
 								occ[rRow-j][rCol-j*2] = 3;
 								occ[rRow-j][rCol+1-j*2] = 4;
-								currentLength++;
-							}else if(occ[rRow-j][rCol-j*2]==0 && obsType == 1) {
-								occ[rRow - j][rCol - j * 2] = 9;
-								occ[rRow - j][rCol + 1 - j * 2] = 10;
 								currentLength++;
 							}else {lDes++;}
 						}else{
@@ -804,13 +738,9 @@ public class PPP{
 				if (type == 5){
 					for (short j=0; j<lDes; j++){
 						if(rCol-j*2>0 && rRow+j<row-1){
-							if(occ[rRow+j][rCol-j*2]==0 && obsType == 0){
+							if(occ[rRow+j][rCol-j*2]==0){
 								occ[rRow+j][rCol-j*2] = 3;
 								occ[rRow+j][rCol+1-j*2] = 4;
-								currentLength++;
-							}else if(occ[rRow+j][rCol-j*2]==0 && obsType == 1) {
-								occ[rRow + j][rCol - j * 2] = 9;
-								occ[rRow + j][rCol + 1 - j * 2] = 10;
 								currentLength++;
 							} else {lDes++;}
 						}else{
@@ -949,10 +879,6 @@ public class PPP{
 					// Left side of obstacle
 					if(occ[i][j]==3||occ[i][j]==4){
 						writer.write("#");
-//						j++;
-					}
-					if(occ[i][j]==9||occ[i][j]==10){
-						writer.write("A");
 //						j++;
 					}
 				}

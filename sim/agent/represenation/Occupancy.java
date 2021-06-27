@@ -54,10 +54,6 @@ public enum Occupancy {
 			return MOVE_LEFT;
 		case 8:
 			return MOVE_RIGHT;
-		case 9:
-			return CLEAR_LEFT;
-		case 10:
-			return CLEAR_RIGHT;
 		case 11:
 			return POI;
 		case 12:
@@ -86,8 +82,6 @@ public enum Occupancy {
 		case BOUNDARY:
 		case OBS_LEFT:
 		case OBS_RIGHT:
-		case CLEAR_LEFT:
-		case CLEAR_RIGHT:
 			return true;
 		default:
 			return false;

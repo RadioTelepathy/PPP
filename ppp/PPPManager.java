@@ -13,8 +13,8 @@ import java.util.Random;
 public class PPPManager {
 	public PPP[] population;	// the array used to store the PPPs population
 	private PPP[] tournament;	// the array used to store the PPPs for the tournament
-	private PPP[] P1C;
-	private PPP[] P2C;
+	private PPP[] P1C;			// the array used for comparing Parent 1 with its most similar child in Crowding
+	private PPP[] P2C;			// the array used for comparing Parent 2 with its most similar child in Crowding
 	private short sizePopu;		// the size of population
 	private short sizeTour;		// the size of tournament
 	private short sizePPP;		// the size of the PPP
@@ -22,6 +22,8 @@ public class PPPManager {
 	private short nDes;			// the number of descriptors
 	private short[] selected;	// Index into Population of PPPs selected for tournament
 	private short[] tourOcc;	// if selected, set to 1, prevent one PPP to be selected twice
+	private float avgTurn = 0;	// average number of turns in the population - updates every 100 mating events
+	private int mutChance = 12; // Chance of Mutation - updates every 100 mating events
 	/*
 	 * 	The constructor for PPPManager
 	 */
@@ -51,18 +53,18 @@ public class PPPManager {
 	private void selectChromosones(short n){ //Creates a list of PPPs of length n
 		//n= sizeTour
 		//System.out.println("select tour");
-		Random generator = new Random();	//??dunno??
-		tournament = new PPP[n];
-		selected = new short[n];			//empty list of tournament-selected PPPs
-		tourOcc = new short[n];				//list of 0s for all PPPs to avoid multiple selection
+		Random generator = new Random();	// for generating random numbers
+		tournament = new PPP[n];			// array of PPPs for storing copies of the tournament selected PPPs
+		selected = new short[n];			// array of population indexes for the PPPs entered into the tournament
+		tourOcc = new short[n];				// array of 0s for all PPPs to avoid multiple selection
 		for(short i=0; i<n; i++){
 			short random;					//initialise random number variable
 			do{
 				random = (short)generator.nextInt(sizePopu);  	// Pick a number smaller than the size of the population
 			}while(selectedChromo(random, i));					// Check if the chromosome has been collected before
-			selected[i] = random;								// add randomly selected PPP
-			tournament[i] = new PPP(population[random]);		// add new PPP to the tournament
-			tourOcc[i] = (short)0;								// signify that the new PPP hasn't been selected
+			selected[i] = random;								// record index of randomly selected PPP
+			tournament[i] = new PPP(population[random]);		// add PPP to the tournament
+			tourOcc[i] = (short)0;								// signify that the PPP hasn't been selected as most or least fit
 		}
 	}
 	/*
@@ -102,17 +104,17 @@ public class PPPManager {
 		while (!both_reachable){				// While at least one isn't possible
 			count ++;
 
-			p2 = (short)generator.nextInt(nDes);
-			p1 = (short)generator.nextInt(p2+1);
-			for(short i=p1;i<=p2;i++){
+			p2 = (short)generator.nextInt(nDes);		// Pick the Second Point of Crossover
+			p1 = (short)generator.nextInt(p2+1);	// Pick the First Point of Crossover so that it has an index lower than the second one
+			for(short i=p1;i<=p2;i++){					// Swap each gene between crossover points (inclusive at both ends)
 				Descriptor temp = child1.getDescriptor(i);
 				child1.setDescriptor(child2.getDescriptor(i), i);
 				child2.setDescriptor(temp, i);
 			}
-			child1.updatePPP();
+			child1.updatePPP();							// Update the occupancy array to reflect crossover
 			child2.updatePPP();
 			if (count > 100){
-				System.err.println("\nFailing Crossover");
+				System.err.println("\nFailing Crossover"); // If you can't have two valid children within 100 tries, give up
 				return new PairPPP(parent1, parent2);
 			}
 			if((child1.checkAvailable()) && (child2.checkAvailable())){
@@ -303,8 +305,10 @@ public class PPPManager {
 	 */
 	private short[] mostFit(){
 		short most1, most2;
-		most1 = this.maxTurns();
-		most2 = this.maxTurns();
+		//most1 = this.maxTurns();
+		//most2 = this.maxTurns();
+		most1 = this.minVisibilityWeightedSum();
+		most2 = this.minVisibilityWeightedSum();
 		return new short[] {most1, most2};
 	}
 	
@@ -313,8 +317,10 @@ public class PPPManager {
 	 */
 	private short[] leastFit() {
 		short least1, least2;
-		least1 = this.minTurns();
-		least2 = this.minTurns();
+		//least1 = this.minTurns();
+		//least2 = this.minTurns();
+		least1 = this.maxVisibilityWeightedSum();
+		least2 = this.maxVisibilityWeightedSum();
 		return new short[]{least1, least2};
 	}
 
@@ -394,75 +400,6 @@ public class PPPManager {
 		return new short[]{most1, most2};
 	}
 
-	private short[] mostFitThree() {
-		short most1, most2;
-		most1 = this.maxTurns();
-		most2 = this.minGoalVisibility();
-		return new short[]{most1, most2};
-	}
-
-	private short[] RRmostFit(short i){
-		short most1, most2;
-		switch (i%10){
-			case 1: {
-				most1 = this.minFlushWalls();
-				most2 = this.minFlushWalls()
-				break;
-			}
-			case 2:{
-				most1 = this.minGoalVisibility();
-				most2 = this.minGoalVisibility();
-				break;
-			}
-			case 3:{
-				most1 = this.minVisibilityMagnitude();
-				most2 = this.minVisibilityMagnitude();
-				break;
-			}
-			case 4:{
-				most1 = this.minVisibilityWeightedSum();
-				most2 = this.minVisibilityWeightedSum();
-				break;
-			}
-			default: {
-				most1 = this.maxTurns();
-				most2 = this.maxTurns();
-				break;
-			}
-		}
-		return new short[]{most1, most2};
-	}
-	private short[] RRleastFit(short i){
-		short least1, least2;
-		switch (i%10){
-			case 1: {
-				least1 = this.maxFlushWalls();
-				least2 = this.maxFlushWalls()
-				break;
-			}
-			case 2:{
-				least1 = this.maxGoalVisibility();
-				least2 = this.maxGoalVisibility();
-				break;
-			}
-			case 3:{
-				least1 = this.maxVisibilityMagnitude();
-				least2 = this.maxVisibilityMagnitude();
-				break;
-			}
-			case 4:{
-				least1 = this.maxVisibilityWeightedSum();
-				least2 = this.maxVisibilityWeightedSum();
-				break;
-			}
-			default: {
-				least1 = this.minTurns();
-				least2 = this.minTurns();
-				break;
-			}
-		}
-		return new short[]{least1, least2};
-	}
 
 
 	public void checkPopReachable(){
@@ -482,16 +419,23 @@ public class PPPManager {
 		short[] most = new short[0];
 		short[] least;
 		int similarity = 1;
-		while(similarity>0.9){
+		int count = 0;
+		double threshold = 0.5;
+		while(similarity>threshold){
+			count++;
+			if (count > 49) {
+				threshold += 0.02;
+				count = 0;
+			}
 			selectChromosones(sizeTour);
-			most = this.newMostFit();
+			most = this.mostFit();
 			similarity = getSimilarity(population[selected[most[0]]],population[selected[most[1]]]);
 		}
 		PairPPP temp = twoCrossover(tournament[most[0]],tournament[most[1]]);
 		/** To avoid premature convergence, the children are compared to see which parent they are most similar to,
 		 * each child is then compared to their similar parent, and the stronger of the parent or child survives
 		 **/
-		if(temp.getP1().getCrossover() > temp.getP1().getnDes()/2){
+		if(temp.getP1().getCrossover() < temp.getP1().getnDes()/2){
 			if(temp.getP1().getTurn() > tournament[most[0]].getTurn()){
 				population[selected[most[0]]] = new PPP(temp.getP1());
 			}
@@ -515,14 +459,84 @@ public class PPPManager {
 		//while(mutateIndex == 0){
 		//	mutateIndex = generator.nextInt(sizeTour - 1);
 		//}
-		least = this.newLeastFit();
-		population[selected[least[0]]] = population[selected[least[0]]].mutatePPP();
-		population[selected[least[1]]] = population[selected[least[1]]].mutatePPP();
+		least = this.leastFit();
+		Random generator = new Random();
+		int mutate = generator.nextInt(mutChance);
+		if (mutate == 0){
+			population[selected[least[0]]] = population[selected[least[0]]].mutatePPP();
+			population[selected[least[1]]] = population[selected[least[1]]].mutatePPP();
+		}
 		//population[selected[mutateIndex]] = population[selected[mutateIndex]].mutatePPP();
 		this.checkPopReachable();
-	}
-
-	private void weiMatingEvent(short i){
+	}              //Mating event with both Incest Prevention and Crowding Methods
+	private void matingEventCrowding(short i){
+		this.checkPopReachable();
+		short[] most;
+		short[] least;
+		selectChromosones(sizeTour);
+		most = this.mostFit();
+		PairPPP temp = twoCrossover(tournament[most[0]],tournament[most[1]]);
+		/** To avoid premature convergence, the children are compared to see which parent they are most similar to,
+		 * each child is then compared to their similar parent, and the stronger of the parent or child survives
+		 **/
+		if(temp.getP1().getCrossover() < temp.getP1().getnDes()/2){
+			if(temp.getP1().getTurn() > tournament[most[0]].getTurn()){
+				population[selected[most[0]]] = new PPP(temp.getP1());
+			}
+			if(temp.getP2().getTurn() > tournament[most[1]].getTurn()) {
+				population[selected[most[1]]] = new PPP(temp.getP2());
+			}
+		} else {
+			if(temp.getP2().getTurn() > tournament[most[0]].getTurn()){
+				population[selected[most[0]]] = new PPP(temp.getP2());
+			}
+			if(temp.getP1().getTurn() > tournament[most[1]].getTurn()) {
+				population[selected[most[1]]] = new PPP(temp.getP1());
+			}
+		}
+		least = this.leastFit();
+		Random generator = new Random();
+		int mutate = generator.nextInt(mutChance);
+		if (mutate == 0){
+			population[selected[least[0]]] = population[selected[least[0]]].mutatePPP();
+			population[selected[least[1]]] = population[selected[least[1]]].mutatePPP();
+		}
+		this.checkPopReachable();
+	}      //Mating event with Crowding Method
+	private void matingEventIncest(short i){
+		this.checkPopReachable();
+		short[] most = new short[0];
+		short[] least;
+		/** To avoid premature convergence, before mating the similarity of the parents is checked by going through each cell in the PPP.
+		 If the parents are found to be too similar, select new parents. If suitable parents cannot be found in reasonable time,
+		 the constraint is relaxed and the process is repeated. **/
+		int similarity = 1;
+		double threshold = 0.5;
+		int count = 0;
+		while(similarity>threshold){
+			count++;
+			if (count > 49) {
+				threshold += 0.02;
+				count = 0;
+			}
+			selectChromosones(sizeTour);
+			most = this.mostFit();
+			similarity = getSimilarity(population[selected[most[0]]],population[selected[most[1]]]);
+		}
+		PairPPP temp = twoCrossover(tournament[most[0]],tournament[most[1]]);
+		least = this.leastFit();
+		population[selected[least[0]]] = new PPP(temp.getP1());
+		population[selected[least[1]]] = new PPP(temp.getP2());
+		least = this.leastFit();
+		Random generator = new Random();
+		int mutate = generator.nextInt(mutChance);
+		if (mutate == 0){
+			population[selected[least[0]]] = population[selected[least[0]]].mutatePPP();
+			population[selected[least[1]]] = population[selected[least[1]]].mutatePPP();
+		}
+		this.checkPopReachable();
+	}		//Mating event with Incest Prevention
+	private void classicMatingEvent(short i){
 		this.checkPopReachable();
 		short[] most;
 		short[] least;
@@ -534,11 +548,14 @@ public class PPPManager {
 		population[selected[least[0]]] = new PPP(temp.getP1());
 		population[selected[least[1]]] = new PPP(temp.getP2());
 
-		least = this.newLeastFit();
-		population[selected[least[0]]] = population[selected[least[0]]].mutatePPP();
-		population[selected[least[1]]] = population[selected[least[1]]].mutatePPP();
-		this.checkPopReachable();
-	}
+		least = this.leastFit();
+		Random generator = new Random();
+		int mutate = generator.nextInt(mutChance);
+		if (mutate == 0){
+			population[selected[least[0]]] = population[selected[least[0]]].mutatePPP();
+			population[selected[least[1]]] = population[selected[least[1]]].mutatePPP();
+		}
+	}		//Mating event with no convergence measures
 	
 	/*
 	 * 	100 mating event
@@ -546,10 +563,12 @@ public class PPPManager {
 	public void hundredME(){
 		System.out.print("   ");
 		for(short i=0; i<100;i++){
-			matingEvent(i);
-			System.out.print(".");
+			matingEventIncest(i);
+//			System.out.print(".");
 		}
 		System.out.println();
+		avgTurn = this.averageTurnNum();
+		mutChance = 8 + (int)Math.floor(avgTurn);
 		this.averageTurn();
 	}
 	
@@ -557,7 +576,7 @@ public class PPPManager {
 	 * 	10 times 100 mating event
 	 */
 	public void thousandME(){
-		for(short i=0; i<10;i++){
+		for(short i=0; i<1;i++){
 			System.out.printf("\n  Mating Event Set %d - %d \n", i*100, (i+1)*100);
 			hundredME();
 		}
@@ -568,7 +587,7 @@ public class PPPManager {
 	 * 	one run contains 10,000 mating events
 	 */
 	public void fullRun(){
-		for (int i=0; i<10; i++)
+		for (int i=0; i<1; i++)
 		{
 			System.out.printf("\n Mating Event Set %d - %d", i*1000,(i+1)*1000);
 			thousandME();
@@ -625,6 +644,17 @@ public class PPPManager {
 		}
 		result = result/60;
 		System.out.println("average turn is "+result);
+	}
+
+	public float averageTurnNum(){
+		float result = 0;
+		float tempTurn;
+		for(short i=0; i<60; i++){
+			tempTurn = (float)population[i].getTurn();
+			result += tempTurn;
+		}
+		result = result/60;
+		return result;
 	}
 	
 	public void printFitnessMeasurements(){
